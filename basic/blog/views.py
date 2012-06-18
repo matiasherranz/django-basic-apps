@@ -64,7 +64,7 @@ post_archive_day.__doc__ = date_based.archive_day.__doc__
 
 def post_detail(request, slug, year, month, day, **kwargs):
     """
-    Displays post detail. If user is superuser, view will display 
+    Displays post detail. If user is superuser, view will display
     unpublished post detail for previewing purposes.
     """
     posts = None
@@ -137,16 +137,24 @@ def tag_detail(request, slug, template_name = 'blog/tag_detail.html', **kwargs):
     """
     tag = get_object_or_404(Tag, name__iexact=slug)
 
+    extra_context = {'tag': tag}
+    more = kwargs.pop('extra_context', None)
+
+    if more and isinstance(more, dict):
+        extra_context.update(more)
+
+
     return list_detail.object_list(
         request,
         queryset=TaggedItem.objects.get_by_model(Post,tag).filter(status=2),
-        extra_context={'tag': tag},
+#        extra_context={'tag': tag},
+        extra_context=extra_context,
         template_name=template_name,
         **kwargs
     )
 
 
-def search(request, template_name='blog/post_search.html'):
+def search(request, template_name='blog/post_search.html', **kwargs):
     """
     Search for blog posts.
 
@@ -163,7 +171,8 @@ def search(request, template_name='blog/post_search.html'):
     """
     context = {}
     if request.GET:
-        stop_word_list = re.compile(STOP_WORDS_RE, re.IGNORECASE)
+#        stop_word_list = re.compile(STOP_WORDS_RE, re.IGNORECASE)
+        stop_word_list = STOP_WORDS_RE
         search_term = '%s' % request.GET['q']
         cleaned_search_term = stop_word_list.sub('', search_term)
         cleaned_search_term = cleaned_search_term.strip()
@@ -173,4 +182,10 @@ def search(request, template_name='blog/post_search.html'):
         else:
             message = 'Search term was too vague. Please try again.'
             context = {'message':message}
+
+    extra_context = kwargs.pop('extra_context', None)
+
+    if extra_context and isinstance(extra_context, dict):
+        context.update(extra_context)
+
     return render_to_response(template_name, context, context_instance=RequestContext(request))
