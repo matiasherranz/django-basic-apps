@@ -68,7 +68,11 @@ def post_detail(request, slug, year, month, day, **kwargs):
     unpublished post detail for previewing purposes.
     """
     posts = None
-    if request.user.is_superuser:
+    try:
+        is_superuser = request.user.is_superuser
+    except:
+        is_superuser = False
+    if is_superuser:
         posts = Post.objects.all()
     else:
         posts = Post.objects.published()
